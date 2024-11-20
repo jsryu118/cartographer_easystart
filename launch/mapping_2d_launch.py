@@ -8,7 +8,7 @@ def generate_launch_description():
     cartographer_config_dir = os.path.join(
         get_package_share_directory('cartographer_easystart'),
         'config')
-    lua_file = 'turtle.lua'  # 올바른 lua 파일명으로 수정
+    lua_file = 'mapping_2d.lua'  # 올바른 lua 파일명으로 수정
 
     # Cartographer 노드
     cartographer_node = Node(
@@ -20,14 +20,17 @@ def generate_launch_description():
         arguments=[
             '-configuration_directory', cartographer_config_dir,
             '-configuration_basename', lua_file
-        ]
+        ],
+        remappings=[
+            ('/imu', '/gx5/imu/data')  # 기존 '/imu'를 '/new_imu_topic'으로 remap
+        ],
     )
 
     # Occupancy Grid 노드
     occupancy_grid_node = Node(
         package='cartographer_ros',
-        executable='occupancy_grid_node',
-        name='occupancy_grid_node',
+        executable='cartographer_occupancy_grid_node',
+        name='cartographer_occupancy_grid_node',
         output='screen',
         parameters=[{'use_sim_time': False}],
         arguments=[
