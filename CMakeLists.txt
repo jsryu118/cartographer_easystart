@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(cartographer_ryu)
+project(cartographer_easystart)
 
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
