@@ -9,7 +9,7 @@ def generate_launch_description():
         get_package_share_directory('cartographer_easystart'),
         'config')
     lua_file = 'localization_2d.lua'  # 올바른 lua 파일명으로 수정
-    pbstream_file = '/home/orin_nx/localization/src/cartographer_easystart/maps/test.pbstream'
+    pbstream_file = '/home/orin_nx/localization/src/cartographer_easystart/maps/test6.pbstream'
 
     # Cartographer 노드
     cartographer_node = Node(
@@ -21,7 +21,7 @@ def generate_launch_description():
         arguments=[
             '-configuration_directory', cartographer_config_dir,
             '-configuration_basename', lua_file,
-            '-load_state_filename', pbstream_file  # Load the saved map
+            '-load_state_filename', pbstream_file,  # Load the saved map
         ],
         remappings=[
             ('/imu', '/gx5/imu/data')  # 기존 '/imu'를 '/new_imu_topic'으로 remap
@@ -42,23 +42,30 @@ def generate_launch_description():
     )
 
     # Carto Init Pose 노드
-    # carto_init_pose_node = Node(
-    #     package='cartographer_easystart',  # carto_init_pose가 속한 패키지 이름
-    #     executable='carto_init_pose',  # 빌드된 실행 파일 이름
-    #     name='carto_init_pose_node',  # 노드 이름
-    #     output='screen',
-    #     parameters=[
-    #         {'configuration_directory': cartographer_config_dir},  # 설정 디렉토리 전달
-    #         {'configuration_basename': lua_file}  # Lua 파일명 전달
-    #     ],
-    #     remappings=[
-    #         ('/initialpose', '/initialpose'),  # 필요시 토픽 리매핑
-    #         ('/move_base_simple/goal', '/move_base_simple/goal')
-    #     ]
-    # )
+    carto_init_pose_node = Node(
+        package='cartographer_easystart',  # carto_init_pose가 속한 패키지 이름
+        executable='initialize.py',  # 빌드된 실행 파일 이름
+        name='initialize_py_node',  # 노드 이름
+        output='screen',
+        parameters=[
+            {'configuration_directory': cartographer_config_dir},  # 설정 디렉토리 전달
+            {'configuration_basename': lua_file}  # Lua 파일명 전달
+        ],
+        remappings=[
+            ('/initialpose', '/initialpose'),  # 필요시 토픽 리매핑
+            ('/move_base_simple/goal', '/move_base_simple/goal')
+        ]
+    )
 
+    carto_state_estimator = Node(
+        package='cartographer_easystart',
+        executable='state_estimator',
+        name='carto_state_estimator',
+        output='screen',
+    )
     return LaunchDescription([
         cartographer_node,
         occupancy_grid_node,
-        # carto_init_pose_node,
+        carto_init_pose_node,
+        carto_state_estimator,
     ])

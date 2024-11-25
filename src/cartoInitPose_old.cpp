@@ -122,7 +122,7 @@ class CartoInitPose{
             cartographer_ros_msgs::StartTrajectory start_traj_srv;
             // Setting Values
             start_traj_srv.request.configuration_directory = "/home/ros2nx/carto_ws/src/cartographer_ros/cartographer_ros/configuration_files";
-            start_traj_srv.request.configuration_basename = "backpack_2d_localization.lua";
+            start_traj_srv.request.configuration_basename = "localization_2d.lua";
             start_traj_srv.request.use_initial_pose = true;
             start_traj_srv.request.initial_pose = in_pose;
             start_traj_srv.request.relative_to_trajectory_id = 0;

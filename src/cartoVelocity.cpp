@@ -131,7 +131,7 @@ void velocityCallBack(geometry_msgs::PoseStamped::ConstPtr in_pose){
     vel_pose.twist.twist.angular.z = angluar_velocity_z;
 
     odom_pub.publish(vel_pose);
-
+}
 int main(int argc, char** argv)
 {
     ros::init(argc, argv, "cartoVelocity");

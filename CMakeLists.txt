@@ -19,8 +19,19 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(cartographer_ros_msgs REQUIRED)
+find_package(tf2_eigen REQUIRED)
+find_package(Eigen3 REQUIRED)
+
+include_directories(
+  include
+)
+
+install(DIRECTORY include/
+  DESTINATION include
+)
 
 install(DIRECTORY launch config maps
   DESTINATION share/${PROJECT_NAME}
@@ -34,21 +45,23 @@ endif()
 ament_package()
 
 # Add C++ executable
-add_executable(carto_init_pose_cpp src/cartoInitPose.cpp)
+add_executable(state_estimator src/state_estimator.cpp)
 
-ament_target_dependencies(carto_init_pose_cpp
+ament_target_dependencies(state_estimator
   rclcpp
   geometry_msgs
   nav_msgs
-  cartographer_ros_msgs
+  sensor_msgs
+  tf2_eigen
+  Eigen3
 )
 
-install(TARGETS carto_init_pose_cpp
+install(TARGETS state_estimator
   DESTINATION lib/${PROJECT_NAME})
 
 # Install Python script
 install(
   PROGRAMS
-    scripts/initialize.py
+    scripts/initialize.py scripts/kf.py 
   DESTINATION lib/${PROJECT_NAME}
 )

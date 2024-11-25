@@ -1,3 +1,19 @@
+-- Copyright 2016 The Cartographer Authors
+--
+-- Licensed under the Apache License, Version 2.0 (the "License");
+-- you may not use this file except in compliance with the License.
+-- You may obtain a copy of the License at
+--
+--      http://www.apache.org/licenses/LICENSE-2.0
+--
+-- Unless required by applicable law or agreed to in writing, software
+-- distributed under the License is distributed on an "AS IS" BASIS,
+-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-- See the License for the specific language governing permissions and
+-- limitations under the License.
+
+-- /* Author: Darby Lim */
+
 include "map_builder.lua"
 include "trajectory_builder.lua"
 
@@ -8,63 +24,54 @@ options = {
   tracking_frame = "base_link",
   published_frame = "base_link",
   odom_frame = "odom",
-  provide_odom_frame = true,
-  publish_frame_projected_to_2d = false,
+  provide_odom_frame = false,
+  publish_frame_projected_to_2d = true,
   use_odometry = false,
   use_nav_sat = false,
   use_landmarks = false,
   num_laser_scans = 1,
   num_multi_echo_laser_scans = 0,
-  num_subdivisions_per_laser_scan = 10,
+  num_subdivisions_per_laser_scan = 10, --lidar 느리고, 차량속도 빠를때 올리기
   num_point_clouds = 0,
-  lookup_transform_timeout_sec = 0.2,
+  lookup_transform_timeout_sec = 0.2,  -- 기본값 0.2초에서 증가
   submap_publish_period_sec = 0.3,
-  pose_publish_period_sec = 5e-3,
   trajectory_publish_period_sec = 30e-3,
   rangefinder_sampling_ratio = 1.,
   odometry_sampling_ratio = 1.,
   fixed_frame_pose_sampling_ratio = 1.,
   imu_sampling_ratio = 1.,
   landmarks_sampling_ratio = 1.,
-  publish_tracked_pose = true,
+  publish_tracked_pose = true, 
+  pose_publish_period_sec = 1e-2,
+
 }
 
--- Set the map builder to use localization only
-MAP_BUILDER.use_trajectory_builder_2d = true
-MAP_BUILDER.num_background_threads = 6
+MAP_BUILDER.use_trajectory_builder_2d = true -- for 2d slam or localization
+MAP_BUILDER.num_background_threads = 6 -- Multi-threading으로 성능 최적화
+
+TRAJECTORY_BUILDER_2D.min_range = 0.12
+TRAJECTORY_BUILDER_2D.max_range = 10.
+TRAJECTORY_BUILDER_2D.missing_data_ray_length = 3.
+TRAJECTORY_BUILDER_2D.use_imu_data = true
+TRAJECTORY_BUILDER_2D.use_online_correlative_scan_matching = true 
+TRAJECTORY_BUILDER_2D.motion_filter.max_angle_radians = math.rad(0.1)
+-- TRAJECTORY_BUILDER_2D.ceres_scan_matcher.translation_weight = 5 --0.01
+TRAJECTORY_BUILDER_2D.ceres_scan_matcher.rotation_weight = 0.1 --25
+TRAJECTORY_BUILDER_2D.num_accumulated_range_data = 10
+
+POSE_GRAPH.constraint_builder.min_score = 0.80
+POSE_GRAPH.constraint_builder.global_localization_min_score = 0.80
+
 TRAJECTORY_BUILDER.pure_localization_trimmer = {
   max_submaps_to_keep = 3,
 }
--- Disable submap creation for localization
-TRAJECTORY_BUILDER_2D.use_imu_data = true
-TRAJECTORY_BUILDER_2D.num_accumulated_range_data = 10 --10
-TRAJECTORY_BUILDER_2D.ceres_scan_matcher.translation_weight = 0.001 --0.01
-TRAJECTORY_BUILDER_2D.ceres_scan_matcher.rotation_weight = 0.0005 --25
+POSE_GRAPH.optimize_every_n_nodes = 3 --매핑에 비해 낮춰줘야함
 
-TRAJECTORY_BUILDER_2D.use_online_correlative_scan_matching = true
-TRAJECTORY_BUILDER_2D.submaps.num_range_data = 35  -- Adjust for better localization
-TRAJECTORY_BUILDER_2D.min_range = 0.12
--- TRAJECTORY_BUILDER_2D.max_range = 3.5
+POSE_GRAPH.global_sampling_ratio = 0.003 -- 0.003 -- 전역 매칭 샘플링 비율
+POSE_GRAPH.constraint_builder.fast_correlative_scan_matcher.linear_search_window = 3. -- 선형 검색 범위 (m)
+POSE_GRAPH.constraint_builder.fast_correlative_scan_matcher.angular_search_window = math.rad(30.) -- 각도 검색 범위 (deg)
 
-TRAJECTORY_BUILDER_2D.min_z = -0.8
-TRAJECTORY_BUILDER_2D.max_z = 8.0
-TRAJECTORY_BUILDER_2D.max_range = 50.0
-
-TRAJECTORY_BUILDER_2D.missing_data_ray_length = 3.
-TRAJECTORY_BUILDER_2D.motion_filter.max_angle_radians = math.rad(0.1)
-
--- Adjust pose graph settings for localization
--- POSE_GRAPH.optimize_every_n_nodes = 0
-POSE_GRAPH.constraint_builder.min_score = 0.2
-POSE_GRAPH.constraint_builder.global_localization_min_score = 0.7
-
-POSE_GRAPH.constraint_builder.sampling_ratio = 0.01
-POSE_GRAPH.optimize_every_n_nodes = 1
-POSE_GRAPH.global_sampling_ratio = 0.01
-POSE_GRAPH.constraint_builder.loop_closure_translation_weight =  3e5 --3e5
-POSE_GRAPH.constraint_builder.loop_closure_rotation_weight = 1e6 --1e6
--- POSE_GRAPH.constraint_builder.max_constraint_distance = 5 -- 15
-POSE_GRAPH.constraint_builder.ceres_scan_matcher.translation_weight =  5 --10.  --0.01
-POSE_GRAPH.constraint_builder.ceres_scan_matcher.rotation_weight =  0.1 
+-- Localization 전용으로 설정
+-- POSE_GRAPH.global_constraint_search_after_n_seconds = 10. -- 전역 제약 조건 검색 주기
 
 return options
